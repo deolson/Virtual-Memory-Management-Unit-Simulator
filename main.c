@@ -46,6 +46,7 @@ int main(int argc, char * const argv[]) {
   replacements = 0;
 
   //using getopt function -- told some people about this -- really useful
+  //expect I'm currently assume good input on numbers, so I've used atoi
   int c;
   while( (c = getopt(argc, argv, ":p:f:b:r:")) != -1 ){ //specifies option flags p,f,b,r
     if(optarg == inst_file) {
@@ -94,6 +95,7 @@ int main(int argc, char * const argv[]) {
   //grab the offset bits log2(block_size)
   offset = (int)(log(block_size) / log(2));
 
+  //gets the actual instruction, we can use the first letter given our data
   char policyChar = rep_policy[0];
   policyChar = tolower(policyChar);
 
@@ -103,6 +105,7 @@ int main(int argc, char * const argv[]) {
   //loops through the input file and parses each instruction by line
   readInput(inst_file);
 
+  //final output calculations
   double total = reads+writes;
   double readPercent = (reads / total) * 100;
   double writePercent = (writes / total) * 100;
@@ -118,7 +121,7 @@ int main(int argc, char * const argv[]) {
   return 0;
 }
 
-//loops throguh instruction file and gets < op > and optional [ addr ]
+//loops through instruction file and gets < op > and optional [ addr ]
 //allowed to assume good input here
 void readInput(char *inputFile) {
   FILE *file = fopen(inputFile,"r");
@@ -146,7 +149,7 @@ void readInput(char *inputFile) {
       count++;
       token = strtok(NULL, " \n");
     }
-    // update the frame and page table given we know the instruction and addr now
+    // update the frame and page table given the instruction and addr now
     procInstruct(instruction, addr);
   }
 }
@@ -155,7 +158,6 @@ void readInput(char *inputFile) {
 void procInstruct(char *instruction, unsigned int addr) {
 
   unsigned int pagenumber = addr >> offset;
-
   char firstLetter = instruction[0];
 
   switch(firstLetter) {
@@ -163,14 +165,14 @@ void procInstruct(char *instruction, unsigned int addr) {
 
       printf("START_WRITE\n");
       printf("\tvirt_addr=0x%08x\n", addr);
-
+      //nonvalid page number given
       if( pagenumber >= num_pages ) {
         printf("\tSegmentation fault: illegal_page=%u\n", pagenumber);
         printf("END_WRITE\n\n");
         return;
       }
 
-      writes++;
+      writes++; //valid write instruction
 
       policy_fun('w', pagenumber);
       printf("END_WRITE\n\n");
@@ -180,14 +182,14 @@ void procInstruct(char *instruction, unsigned int addr) {
 
       printf("START_READ\n");
       printf("\tvirt_addr=0x%08x\n", addr);
-
+      //nonvalid page number given
       if( pagenumber >= num_pages ) {
         printf("\tSegmentation fault: illegal_page=%u\n", pagenumber);
         printf("END_READ\n\n");
         return;
       }
 
-      reads++;
+      reads++; //valid read instruction
 
       policy_fun('r', pagenumber);
       printf("END_READ\n\n");
@@ -205,8 +207,10 @@ void procInstruct(char *instruction, unsigned int addr) {
   }
 }
 
+//sets the policy we will be using given the first character of that policy
 void decidePolicy(char policyChar) {
-
+  //using a function pointer, our general policy will get set depending user input
+  //allows us to save initializing structs we wont need
   switch (policyChar) {
     case 'f':
       initFIFO();

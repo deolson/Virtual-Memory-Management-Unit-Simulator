@@ -16,12 +16,5 @@ queue.o: queue.h queue.c
 clock.o: clock.c
 	gcc -Wall -c clock.c
 
-# all: thebar.c bartender.o customer.o
-# 	gcc -Wall -o graph thebar.c bartender.o customer.o -lpthread
-
-
-# customer.o: customer.h customer.c
-# 	gcc -Wall -c customer.c
-
 clean:
 	rm -f vmm *.o

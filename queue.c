@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "queue.h"
 
+//print the fifo/lru queue used for debugging
 void	printqueue(struct queue *q) {
 
 	if(isempty(q)) {
