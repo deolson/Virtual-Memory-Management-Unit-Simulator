@@ -4,6 +4,12 @@ extern int num_pages;
 extern int num_frames;
 extern int offset;
 
+extern double reads;
+extern double writes;
+extern double faults;
+extern double replacements;
+
+
 static const int MAX_BIT_SIZE = 32;
 static const int MOST_SIG_BIT = 31;
 

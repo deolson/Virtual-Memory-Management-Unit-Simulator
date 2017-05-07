@@ -1,24 +1,12 @@
-#include <stdlib.h>
 #include <stdio.h>
 
-#include "queue.h"
 #include "table.h"
 
-void fifoReplacement(char instruction, int pagenumber) {
-  queueReplacement(instruction, pagenumber, 0);
-}
+int clock_placement = 0;
 
-void LRUReplacement(char instruction, int pagenumber) {
-  queueReplacement(instruction, pagenumber, 1);
-}
+int evictFrame();
 
-void queueReplacement(char instruction, int pagenumber, int LRU_flag) {
-
-  if(!contains(pagenumber, fifoQ)) {
-    enqueue(pagenumber, fifoQ);
-  } else if (LRU_flag) {
-    enqueue(removePage(pagenumber,fifoQ),fifoQ);
-  }
+void clockReplacement(char instruction, int pagenumber) {
 
   if(validBitshift(PTEs[pagenumber], MOST_SIG_BIT)) {
     printf("\tphys_addr=0x%08x\n", (PTEs[pagenumber] & PTE_MASK) << offset );
@@ -26,6 +14,7 @@ void queueReplacement(char instruction, int pagenumber, int LRU_flag) {
   }
 
   printf("\tPage fault: page=%d\n", pagenumber);
+
   faults++;
 
   int openframe = getFreeFrame();
@@ -35,8 +24,11 @@ void queueReplacement(char instruction, int pagenumber, int LRU_flag) {
   }
 
   replacements++;
-  int evicted_page = dequeue(fifoQ);
-  int evicted_frame = PTEs[evicted_page] & PTE_MASK;
+
+  int evicted_frame = evictFrame();
+  printf("evicted frame %d\n",evicted_frame);
+
+  int evicted_page = FTEs[evicted_frame] & FTE_MASK;
 
   if( validBitshift( PTEs[evicted_page] , MOST_SIG_BIT-1) )
     printf("\tPage replacement: evicted_page=%d, writeout=true\n",evicted_page);
@@ -47,5 +39,15 @@ void queueReplacement(char instruction, int pagenumber, int LRU_flag) {
   FTEs[evicted_frame] = 0x80000000;
 
   updateTables( evicted_frame , pagenumber, instruction);
+}
 
+int evictFrame() {
+  while(1) {
+    if( validBitshift(PTEs[(FTEs[clock_placement] & FTE_MASK)], MOST_SIG_BIT-2) ) {
+      PTEs[(FTEs[clock_placement] & FTE_MASK)] = flipBit(PTEs[(FTEs[clock_placement] & FTE_MASK)], (MOST_SIG_BIT-2) );
+    } else {
+      return clock_placement;
+    }
+    clock_placement = (clock_placement+1) % num_frames;
+  }
 }

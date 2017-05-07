@@ -11,6 +11,7 @@ void rReplacement(char instruction, int pagenumber) {
   }
 
   printf("\tPage fault: page=%d\n", pagenumber);
+  faults++;
 
   int openframe = getFreeFrame();
   if(openframe != -1) {
@@ -18,6 +19,8 @@ void rReplacement(char instruction, int pagenumber) {
     return;
   }
 
+  replacements++;
+  
   int evicted_frame = rand() % num_frames;
   int evicted_page = FTEs[evicted_frame] & FTE_MASK;
 

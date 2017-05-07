@@ -18,6 +18,11 @@ void (*policy_fun)(char instruction, int pagenumber);
 int offset;
 struct queue *fifoQ;
 
+double reads;
+double writes;
+double faults;
+double replacements;
+
 //prototypes
 void readInput(char *inputFile);
 void procInstruct(char *instruction, unsigned int addr);
@@ -34,6 +39,11 @@ int main(int argc, char * const argv[]) {
   char *rep_policy = "random"; //(optional) is the page replacement policy.(defaults to random, if not given)
   srand(time(NULL));
   char* inst_file = argv[argc-1]; //(required) is a path to a file containing instructions
+
+  reads = 0;
+  writes = 0;
+  faults = 0;
+  replacements = 0;
 
   //using getopt function -- told some people about this -- really useful
   int c;
@@ -92,6 +102,13 @@ int main(int argc, char * const argv[]) {
 
   //loops through the input file and parses each instruction by line
   readInput(inst_file);
+
+  double total = reads+writes;
+  double readPercent = (reads / total) * 100;
+  double writePercent = (writes / total) * 100;
+  double faultPercent = (faults / total) * 100;
+  double replacementPercent = (replacements/total) * 100;
+  printf("inst_count=%.0f (reads=%.2f%%, writes=%.2f%%), page_faults=%.0f (%.2f%%), replacements=%.0f (%.2f%%)\n",total, readPercent, writePercent, faults, faultPercent, replacements, replacementPercent);
 
   //frees our mallocs
   if (policyChar == 'f' || policyChar == 'l')
@@ -153,6 +170,8 @@ void procInstruct(char *instruction, unsigned int addr) {
         return;
       }
 
+      writes++;
+
       policy_fun('w', pagenumber);
       printf("END_WRITE\n\n");
       break;
@@ -168,6 +187,8 @@ void procInstruct(char *instruction, unsigned int addr) {
         return;
       }
 
+      reads++;
+
       policy_fun('r', pagenumber);
       printf("END_READ\n\n");
       break;
@@ -182,12 +203,6 @@ void procInstruct(char *instruction, unsigned int addr) {
       }
       break;
   }
-
-  // printf("\n\n");
-  // printPTEs();
-  // printf("\n\n");
-  // printFTEs();
-  // printf("\n\n");
 }
 
 void decidePolicy(char policyChar) {
@@ -202,6 +217,7 @@ void decidePolicy(char policyChar) {
       policy_fun = LRUReplacement;
       break;
     case 'c':
+      policy_fun = clockReplacement;
       break;
     default:
        policy_fun = rReplacement;

@@ -15,6 +15,7 @@ struct qentry
 extern struct queue *fifoQ;
 
 void queueReplacement(char instruction, int pagenumber, int LRU_flag);
+int removePage(int pagenumber, struct queue *q);
 void	printqueue(struct queue *q);
 int	isempty(struct queue *q);
 void enqueue(int enqframe, struct queue *q);
